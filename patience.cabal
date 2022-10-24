@@ -1,0 +1,23 @@
+name:           patience
+version:        1.0.0
+author:         Author name here
+cabal-version:  1.12
+build-type:     Simple
+
+library
+  hs-source-dirs: lib
+  build-depends: base >= 4.7 && <5
+  exposed-modules: VoorbeeldModule
+
+executable patience
+  main-is: Main.hs
+  hs-source-dirs: src
+  default-language: Haskell2010
+  build-depends: base >= 4.7 && <5, patience
+
+test-suite patience-test
+  type: exitcode-stdio-1.0
+  main-is: VoorbeeldTest.hs
+  hs-source-dirs: test
+  default-language: Haskell2010
+  build-depends: base >=4.7 && <5, hspec <= 2.10.6, patience
