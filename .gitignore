@@ -1,0 +1,11 @@
+.stack-work/
+dist/
+dist-newstyle/
+out/
+
+.idea/
+.vscode/
+
+.DS_Store
+*.exe
+*.dll
