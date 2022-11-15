@@ -29,7 +29,7 @@ fps = 60
 
 -- Seed voor random generator
 seed :: Int
-seed = 45
+seed = 47
 
 ----------------
 -- Initialisatie
@@ -165,8 +165,6 @@ render game = pictures [renderAllStacks (gameStacks (board game)), renderSelecto
 -----------
 -- Gameplay
 -----------
-
--- FIXME: add all keybinds
 moveInDir :: Coordinate -> Direction -> Coordinate
 moveInDir (x, y) dir | dir == U = (x, y-1)
                      | dir == D = (x, y+1)
@@ -242,7 +240,6 @@ getSubStack sel stack = reverse (take ((length stack) - y) (reverse stack)) wher
 removeStack :: Game -> Game
 removeStack game = game{selector = (selector game){selected = Nothing},board = (board game){gameStacks = replaceNth (snd (fromJust (selected (selector game)))) (flipLastCard (take (snd (fromJust (selected (selector game)))) rmStack)) (gameStacks (board game))}} where rmStack = (gameStacks (board game))!!(fst (fromJust (selected (selector game))))
 
--- FIXME: pretty broky, just fix
 moveStack :: Selector -> Board -> Game -> Game
 moveStack sel board game | canMoveStack subStack dest = game{board = board{gameStacks = replaceNth (fst (position sel)) (dest++subStack) (gameStacks board)}}
                          | otherwise = game
@@ -254,12 +251,14 @@ isOneHigher :: Card -> Stack -> Bool
 isOneHigher card@(t,v,s) stack | null stack = v == A
                                | otherwise = valToNum card == succ (valToNum lCard) && t == tLast where lCard@(tLast, vLast, sLast) = last stack
 
+-- Geeft ge ending stack terug die bij een bepaalde kaart hoort
 getEndStack :: Card -> Board -> Stack
 getEndStack (t,v,s) board | t == Club = (endingStacks board)!!0
                           | t == Diamond = (endingStacks board)!!1
                           | t == Spade = (endingStacks board)!!2
                           | t == Heart = (endingStacks board)!!3
 
+-- Add een bepaalde kaart aan zijn bijhoorende ending stack
 moveToEndStack :: Card -> [Stack] -> [Stack]
 moveToEndStack card@(t,v,s) endingStacks | t == Club = replaceNth 0 ((endingStacks!!0)++[card]) endingStacks
                                          | t == Diamond = replaceNth 1 ((endingStacks!!1)++[card]) endingStacks
@@ -267,8 +266,10 @@ moveToEndStack card@(t,v,s) endingStacks | t == Club = replaceNth 0 ((endingStac
                                          | t == Heart = replaceNth 3 ((endingStacks!!3)++[card]) endingStacks
                                          | otherwise = endingStacks
 
+-- hulpFunctie die de laatste kaart van een stack verwijderd en evt de nieuwe laatste kaart omdraait
 rmLastCard :: Stack -> Stack
 rmLastCard stack | length stack == 0 = stack
+                 | length stack == 1 = []
                  | otherwise = flipLastCard (init stack)
 
 handleSpace :: Game -> Coordinate -> Game
@@ -282,13 +283,26 @@ handleEnter sel board game | isNothing (selected sel) = selectCard sel board gam
                            where subStack = getSubStack sel ((gameStacks board)!!(fst (fromJust (selected sel))))
                                  dest = (gameStacks board)!!(fst (position sel))
 
+-- Hulpfunctie die een kaart op een bepaalde coordinaat zoekt
 findCard :: Coordinate -> Board -> Card
 findCard (x,y) board = ((gameStacks board)!!x)!!y
+
+-- Adds card from pile to the selector position
+addFromPile :: Board -> Coordinate -> Board
+addFromPile board pos | null (pile board) = board
+                      | canMoveStack [last (pile board)] (curStack) = board{gameStacks = replaceNth (fst pos) (curStack++[last (pile board)]) (gameStacks board), pile = flipLastCard (init (pile board))}
+                      | otherwise = board
+                      where curStack = (gameStacks board)!!(fst pos)
 
 -- Hulpfunctie die nagaat of een bepaalde toets is ingedrukt.
 isKey :: SpecialKey -> Event -> Bool
 isKey k1 (EventKey (SpecialKey k2) Down _ _) = k1 == k2
 isKey _  _                                   = False
+
+-- detect if key pressed is a normal letter
+isNormalKey :: Char -> Event -> Bool
+isNormalKey k1 (EventKey (Char k2) Down _ _) = k1 == k2
+isNormalKey _ _ = False
 
 -- FIXME: Rotate Has not been implemented
 handleInput :: Event -> Game -> Game
@@ -299,6 +313,7 @@ handleInput ev game
     | isKey KeyRight ev = moveSelector game R
     | isKey KeyEnter ev = handleEnter (selector game) (board game) game
     | isKey KeySpace ev && length (gameStacks (board game)) /= 0 && isOneHigher (findCard coord (board game)) (getEndStack (findCard coord (board game)) (board game)) = handleSpace game coord
+    | isNormalKey 'p' ev = game{board = addFromPile (board game) (position (selector game))}
     | otherwise = game
     where coord@(x,y) = (position (selector game))
 
