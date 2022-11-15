@@ -1,3 +1,5 @@
+module Logica where
+
 import DataStructures
 import Graphics.Gloss
 import Graphics.Gloss.Juicy
@@ -305,7 +307,3 @@ handleInput ev game
 -- Update het bord in elke stap.
 step :: Float -> Game -> Game
 step _ b = b
-
-main :: IO ()
-main =  play window green fps initGame render handleInput step
-
