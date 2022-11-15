@@ -294,6 +294,11 @@ addFromPile board pos | null (pile board) = board
                       | otherwise = board
                       where curStack = (gameStacks board)!!(fst pos)
 
+rotatePile :: Stack -> Stack
+rotatePile pile | length pile <= 1 = pile
+                | length pile <= 3 = flipLastCard ([(last pile)] ++ (init pile))
+                | otherwise = flipLastCard ((drop ((length pile)-3) pile) ++ (take ((length pile)-3) pile))
+
 -- Hulpfunctie die nagaat of een bepaalde toets is ingedrukt.
 isKey :: SpecialKey -> Event -> Bool
 isKey k1 (EventKey (SpecialKey k2) Down _ _) = k1 == k2
@@ -314,6 +319,7 @@ handleInput ev game
     | isKey KeyEnter ev = handleEnter (selector game) (board game) game
     | isKey KeySpace ev && length (gameStacks (board game)) /= 0 && isOneHigher (findCard coord (board game)) (getEndStack (findCard coord (board game)) (board game)) = handleSpace game coord
     | isNormalKey 'p' ev = game{board = addFromPile (board game) (position (selector game))}
+    | isNormalKey 'r' ev = game{board = (board game){pile = rotatePile (pile (board game))}}
     | otherwise = game
     where coord@(x,y) = (position (selector game))
 
@@ -323,4 +329,3 @@ step _ b = b
 
 main :: IO ()
 main =  play window green fps initGame render handleInput step
-
