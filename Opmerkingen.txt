@@ -1,0 +1,5 @@
+- functioneel meeste in order maar kan niet van stapel naar eindstapel 
+- Testen gemaakt ok 
+- opdeling in modules niet zo goed, nog te veel code in main  
+- nog heel veel constanten over je code 
+- Vaak goede korte functies
